@@ -38,4 +38,4 @@ Removed a couple strings from enUS locale mentioning the TSM desktop app from TS
 I've spent quite a few hours on this already, feel free to mail any eventual gold donations to Lyneff(Felsong) in game :D
 
 > [!NOTE]
-> This readme is just Copy/Paste of Work In Progress.txt
+> This readme is just Copy/Paste of Work In Progress.txt . Meaning some features may not work on one server while every if not all work on other.
