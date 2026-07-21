@@ -39,3 +39,5 @@ I've spent quite a few hours on this already, feel free to mail any eventual gol
 
 > [!NOTE]
 > This readme is just Copy/Paste of Work In Progress.txt . Meaning some features may not work on one server while every if not all work on other.
+>
+>  For TWoW: You can use [AppdataFetcher](https://github.com/MrUnstable/TauriTSMAppDataFetcher) {No need to manually scan AH) ;)
