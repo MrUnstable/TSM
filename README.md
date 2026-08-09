@@ -1,4 +1,6 @@
 # TSM TradeSkillMaster + modules for Legion 7.3.5 Client
+### For Tauri: You can use [AppdataFetcher](https://github.com/MrUnstable/TauriTSMAppDataFetcher) (No need to manually scan AH) ;)
+## Modules:
 > TradeSkillMaster v3.6.43 (lastest Legion)
 > 
 > TradeSkillMaster_Accounting v3.0.22
@@ -18,7 +20,7 @@
 > TradeSkillMaster_Vendoring v3.0.8
 > 
 > TradeSkillMaster_Warehousing v3.0.9 
-### For Tauri: You can use [AppdataFetcher](https://github.com/MrUnstable/TauriTSMAppDataFetcher) (No need to manually scan AH) ;)
+
 
 ## FEATURES TESTED WORKING:
 - Slow Full Scan (and item market value in tooltip)
