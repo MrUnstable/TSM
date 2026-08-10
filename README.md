@@ -1,5 +1,6 @@
 # TSM TradeSkillMaster + modules for Legion 7.3.5 Client
-### For Tauri: You can use [AppdataFetcher](https://github.com/MrUnstable/TauriTSMAppDataFetcher) (No need to manually scan AH) ;)
+>[!NOTE]
+> ### For Tauri: You can use [AppdataFetcher](https://github.com/MrUnstable/TauriTSMAppDataFetcher) (No need to manually scan AH) ;)
 ## Modules:
 > TradeSkillMaster v3.6.43 (lastest Legion)
 > 
@@ -28,16 +29,7 @@
 - Posting
 - Canceling
 - Search of item ID or group items
-
-## FEATURES NOT WORKING:
-- Shopping text search
 - GetAll quickscan
 
-## EDITS:
-Removed a couple strings from enUS locale mentioning the TSM desktop app from TSM_AuctionDB as well as the text & banner about the TSM desktop app on the main configration window as it's not concerning us playing on a private server
-
-I've spent quite a few hours on this already, feel free to mail any eventual gold donations to Lyneff(Felsong) in game :D
-
-> [!NOTE]
-> This readme is just Copy/Paste of Work In Progress.txt . Meaning some features may not work on one server while some work on other.
->
+## FEATURES NOT WORKING:
+- Shopping text search (Leather/Epic..etc)
