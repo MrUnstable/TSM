@@ -362,7 +362,7 @@ realmData = {
 	[1143] = "Khaz Modan,PVE,enUS,Cyclone,US,CST",
 	[3726] = "Khaz'goroth,PVE,enUS,Bloodlust,US,AEST", -- US9 / new Oceanic datacenter
 	[1134] = "US", -- Khaz'goroth / old US datacenter
-	[9]    = "Kil'jaeden,PVP,enUS,Bloodlust,US,PST",
+--	[9]    = "Kil'jaeden,PVP,enUS,Bloodlust,US,PST",
 	[4]    = "Kilrogg,PVE,enUS,Bloodlust,US,PST",
 	[1071] = "Kirin Tor,RP,enUS,Rampage,US,CST",
 	[1146] = "Korgath,PVP,enUS,Vengeance,US,CST",
@@ -427,7 +427,7 @@ realmData = {
 	[1557] = "Shattered Halls,PVP,enUS,Shadowburn,US,PST",
 	[72]   = "Shattered Hand,PVP,enUS,Shadowburn,US,EST",
 	[1354] = "Shu'halo,PVE,enUS,Vengeance,US,PST",
-	[12]   = "Silver Hand,RP,enUS,Bloodlust,US,PST",
+--	[12]   = "Silver Hand,RP,enUS,Bloodlust,US,PST",
 	[86]   = "Silvermoon,PVE,enUS,Reckoning,US,PST",
 	[1356] = "Sisters of Elune,RP,enUS,Cyclone,US,CST",
 	[74]   = "Skullcrusher,PVP,enUS,Ruin,US,EST",
@@ -456,7 +456,7 @@ realmData = {
 	[1263] = "Thrall,PVE,enUS,Rampage,US,EST",
 	[105]  = "Thunderhorn,PVE,enUS,Vindication,US,CST",
 	[103]  = "Thunderlord,PVP,enUS,Ruin,US,CST",
-	[11]   = "Tichondrius,PVP,enUS,Bloodlust,US,PST",
+--	[11]   = "Tichondrius,PVP,enUS,Bloodlust,US,PST",
 	[3210] = "Tol Barad,PVP,ptBR,Shadowburn,US,US",
 	[1360] = "Tortheldrin,PVP,enUS,Reckoning,US,EST",
 	[1175] = "Trollbane,PVE,enUS,Ruin,US,EST",
@@ -485,6 +485,9 @@ realmData = {
 	[1259] = "Zuluhed,PVP,enUS,Shadowburn,US,EST",
 --}}
 --{{ Europe
+	[12] = "[HU] Tauri WoW Server,PvP,enGB,Area52,EU",
+	[9] = "[EN] Evermoon,PvE,enGB,Area52,EU",
+	[11] = "[HU] Warriors of Darkness,PvP,enGB,Area52,EU",
 	[577]  = "Aegwynn,PVP,deDE,Misery,EU",
 	[1312] = "Aerie Peak,PVE,enGB,Reckoning / Abrechnung,EU",
 	[518]  = "Agamaggan,PVP,enGB,Reckoning / Abrechnung,EU",
@@ -1264,6 +1267,7 @@ connectionData = {
 
 	-- English
 	-- PVE
+	"9,12", -- Tauri & Evermoon
 	"1082,1391,1394", -- Kul Tiras / Alonsus / Anachronos
 	"1081,1312", -- Bronzebeard / Aerie Peak
 	"1416,1298,1310", -- Blade's Edge / Vek'nilash / Eonar

@@ -15,6 +15,16 @@ local SCAN_THREAD_PRIORITY = 0.8
 local SCAN_RESULT_DELAY = 0.1
 local MAX_SOFT_RETRIES = 20
 local MAX_HARD_RETRIES = 2
+-- Auctionator (which reliably completes a GetAll-based scan on this server in
+-- ~2 minutes) does two things TSM's stock GetAll code doesn't: it never trusts
+-- the server-reported total auction count if it looks insane, and it never
+-- treats a single bad/missing row as fatal - it just skips it and keeps going.
+-- An earlier attempt here to fix this by *retrying* stalled rows instead made
+-- things far worse (an 11-minute run that still failed), which confirms the
+-- real problem isn't transient timing - some rows/total counts are just wrong
+-- and waiting longer for them never helps. So we mirror Auctionator's approach
+-- instead: sanity-clamp the total, and skip rather than retry or abort.
+local GETALL_MAX_SANE_TOTAL_AUCTIONS = 500000 -- same threshold Auctionator uses
 
 
 
@@ -632,34 +642,51 @@ function private.GetAllScanThread(self)
 	self:WaitForEvent("AUCTION_ITEM_LIST_UPDATE")
 	self:WaitForFunction(CanSendAuctionQuery)
 
+	-- Auctionator (which reliably finishes a GetAll scan on this server) never
+	-- waits for numAuctions to match the server-reported total - it reads
+	-- whatever's available the instant the list updates. It does, however,
+	-- discard the reported total if it's obviously nonsense (this server can
+	-- apparently report a garbage/negative/huge total), falling back to the
+	-- count actually delivered.
 	local numAuctions, totalNum = GetNumAuctionItems("list")
+	if not totalNum or totalNum > GETALL_MAX_SANE_TOTAL_AUCTIONS or totalNum < numAuctions then
+		totalNum = numAuctions
+	end
 	if numAuctions ~= totalNum then
-		return private:DoCallback("GETALL_BAD_DATA")
+		-- non-fatal - just means the server thinks there's more than what
+		-- actually came through; scan what we did get instead of blocking on it
+		TSM:LOG_INFO("GetAll reported total (%d) doesn't match delivered count (%d), continuing with what was delivered", totalNum, numAuctions)
 	end
 	private:DoCallback("GETALL_PROGRESS", 1, numAuctions)
 
-	-- scan the results (slowly as to not cause disconnects)
+	-- scan the results (slowly as to not cause disconnects). Individual rows
+	-- that never populate are skipped rather than retried or treated as fatal -
+	-- retrying them doesn't help (they're not "late", they're just not coming),
+	-- and a handful of missing rows out of thousands shouldn't throw away an
+	-- otherwise-good scan.
 	local scanData = {}
+	local numSkipped = 0
 	for i=1, numAuctions do
 		local itemString = TSMAPI.Item:ToBaseItemString(GetAuctionItemLink("list", i))
 		local _, _, stackSize, _, _, _, _, _, _, buyout = GetAuctionItemInfo("list", i)
-		if not itemString or not stackSize or not buyout then
-			return private:DoCallback("GETALL_BAD_DATA")
-		end
 
-		local itemBuyout = TSMAPI.Util:Round(buyout / stackSize)
-		if not scanData[itemString] then
-			scanData[itemString] = {buyouts={}, minBuyout=0, numAuctions=0}
-		end
-		if itemBuyout > 0 then
-			if scanData[itemString].minBuyout == 0 or itemBuyout < scanData[itemString].minBuyout then
-				scanData[itemString].minBuyout = itemBuyout
+		if itemString and stackSize and buyout then
+			local itemBuyout = TSMAPI.Util:Round(buyout / stackSize)
+			if not scanData[itemString] then
+				scanData[itemString] = {buyouts={}, minBuyout=0, numAuctions=0}
 			end
-			for i=1, stackSize do
-				tinsert(scanData[itemString].buyouts, itemBuyout)
+			if itemBuyout > 0 then
+				if scanData[itemString].minBuyout == 0 or itemBuyout < scanData[itemString].minBuyout then
+					scanData[itemString].minBuyout = itemBuyout
+				end
+				for i=1, stackSize do
+					tinsert(scanData[itemString].buyouts, itemBuyout)
+				end
 			end
+			scanData[itemString].numAuctions = scanData[itemString].numAuctions + 1
+		else
+			numSkipped = numSkipped + 1
 		end
-		scanData[itemString].numAuctions = scanData[itemString].numAuctions + 1
 
 		if i % 500 == 0 then
 			private:DoCallback("GETALL_PROGRESS", i, numAuctions)
@@ -668,7 +695,14 @@ function private.GetAllScanThread(self)
 		self:Yield()
 	end
 	private:DoCallback("GETALL_PROGRESS", numAuctions, numAuctions)
-	if numAuctions ~= GetNumAuctionItems("list") then
+
+	if numSkipped > 0 then
+		TSM:LOG_INFO("GetAll scan skipped %d of %d rows that never returned data", numSkipped, numAuctions)
+	end
+	if next(scanData) == nil then
+		-- got nothing at all usable - this is the only case actually worth
+		-- treating as a hard failure
+		TSM:LOG_ERR("GetAll scan produced no usable data (%d rows, all skipped)", numAuctions)
 		return private:DoCallback("GETALL_BAD_DATA")
 	end
 

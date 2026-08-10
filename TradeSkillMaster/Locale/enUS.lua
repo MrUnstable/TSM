@@ -94,7 +94,7 @@ L["Changes to the specified profile (i.e. '/tsm profile Default' changes to the 
 L["Character Name on Other Account"] = true
 L["Characters"] = true
 L["Chat Tab"] = true
-L["Check out our completely free, desktop application which has tons of features including deal notification emails, automatic updating of AuctionDB prices, automatic TSM setting backup, and more! You can find this app by going to %s."] = ""
+L["Check out our completely free, desktop application which has tons of features including deal notification emails, automatic updating of AuctionDB prices, automatic TSM setting backup, and more! You can find this app by going to %s."] = true
 L["Check this box to override this group's operation(s) for this module."] = true
 L["Clean Bags Automatically"] = true
 L["Clean Bank Automatically"] = true
@@ -540,7 +540,7 @@ L["Usage: /tsm price <ItemLink> <Price String>"] = true
 L["Use the group box below to move this group and all subgroups of this group. Moving a group will cause all items in the group (and its subgroups) to be removed from its current parent group and added to the new parent group."] = true
 L["Use the options below to change and tweak the appearance of TSM."] = true
 L["Use the tabs above to select the module for which you'd like to configure operations."] = true
-L["Using our website you can get help with TSM, suggest features, and give feedback."] = ""
+L["Using our website you can get help with TSM, suggest features, and give feedback."] = true
 L["Value Price Source"] = true
 L["Various modules can sync their data between multiple accounts automatically whenever you're logged into both accounts."] = true
 L["Vendor Buy Price:"] = true

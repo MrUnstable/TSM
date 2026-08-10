@@ -1,0 +1,14 @@
+## Interface: 70300
+## Title: |cff00ff00TradeSkillMaster_AppHelper|r
+## Notes: Acts as a connection between the TSM addon and app.
+## Author: Sapu94, Bart39
+## Version: v3.0.4
+## SavedVariables: TradeSkillMaster_AppHelperDB
+## Dependency: TradeSkillMaster
+## X-Curse-Packaged-Version: v3.0.4
+## X-Curse-Project-Name: TradeSkillMaster_AppHelper
+## X-Curse-Project-ID: tradeskillmaster_apphelper
+## X-Curse-Repository-ID: wow/tradeskillmaster_apphelper/mainline
+
+TradeSkillMaster_AppHelper.lua
+AppData.lua

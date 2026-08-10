@@ -241,10 +241,22 @@ end
 -- Helper Functions
 -- ============================================================================
 
+function dumpme(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dumpme(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 function private:ProcessScanDataThread(self, scanData, itemList)
 	local scanTime = time()
 	TSM.db.realm.lastPartialScan = scanTime
-
 	local scannedItems = nil
 	if itemList then
 		scannedItems = {}
@@ -292,7 +304,6 @@ end
 function private:CalculateMarketValue(buyouts)
 	local totalNum, totalBuyout = 0, 0
 	local numRecords = #buyouts
-
 	for i=1, numRecords do
 		totalNum = i - 1
 		if i ~= 1 and i > numRecords*MIN_PERCENTILE and (i > numRecords*MAX_PERCENTILE or buyouts[i] >= MAX_JUMP*buyouts[i-1]) then

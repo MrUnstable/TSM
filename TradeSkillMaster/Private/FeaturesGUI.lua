@@ -50,6 +50,7 @@ function private:LoadInfo(parent)
 	local color = TSMAPI.Design:GetInlineColor("link")
 	local moduleText = {
 		TSMAPI.Design:ColorText("Accounting", "link") .. " - " .. L["Keeps track of all your sales and purchases from the auction house allowing you to easily track your income and expenditures and make sure you're turning a profit."],
+		TSMAPI.Design:ColorText("AppHelper", "link") .. " - " .. L["Acts as a link between the other TradeSkillMaster modules and the TSM Desktop Application."],
 		TSMAPI.Design:ColorText("AuctionDB", "link") .. " - " .. L["Performs scans of the auction house and calculates the market value of items as well as the minimum buyout. This information can be shown in items' tooltips as well as used by other modules."],
 		TSMAPI.Design:ColorText("Auctioning", "link") .. " - " .. L["Posts and cancels your auctions to / from the auction house according to pre-set rules. Also, this module can show you markets which are ripe for being reset for a profit."],
 		TSMAPI.Design:ColorText("Crafting", "link") .. " - " .. L["Allows you to build a queue of crafts that will produce a profitable, see what materials you need to obtain, and actually craft the items."],
@@ -65,6 +66,42 @@ function private:LoadInfo(parent)
 			type = "ScrollFrame",
 			layout = "flow",
 			children = {
+				{
+					type = "InlineGroup",
+					layout = "flow",
+					title = L["Resources:"],
+					noBorder = true,
+					children = {
+						{
+							type = "Label",
+							relativeWidth = 0.5,
+							text = L["Using our website you can get help with TSM, suggest features, and give feedback."].."\n",
+						},
+						{
+							type = "Image",
+							sizeRatio = .15625,
+							relativeWidth = 0.5,
+							image = "Interface\\Addons\\TradeSkillMaster\\Media\\banner",
+						},
+						{
+							type = "HeadingLine"
+						},
+						{
+							type = "Image",
+							sizeRatio = .15628,
+							relativeWidth = 1,
+							image = "Interface\\Addons\\TradeSkillMaster\\Media\\AppBanner",
+						},
+						{
+							type = "Label",
+							relativeWidth = 1,
+							text = format("\n" .. L["Check out our completely free, desktop application which has tons of features including deal notification emails, automatic updating of AuctionDB prices, automatic TSM setting backup, and more! You can find this app by going to %s."], TSMAPI.Design:ColorText("http://tradeskillmaster.com/app/overview", "link")),
+						}
+					},
+				},
+				{
+					type = "Spacer",
+				},
 				{
 					type = "InlineGroup",
 					layout = "List",

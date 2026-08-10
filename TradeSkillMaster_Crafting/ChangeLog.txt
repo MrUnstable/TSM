@@ -1,3 +1,6 @@
+v3.2.4b
+^Fixed the craft queue... Thanks Default UI.
+
 v3.2.4
 *Fixed bug with estimated craft cost being incorrect in some situations
 *Fixed bug with intermediate crafting in Gathering

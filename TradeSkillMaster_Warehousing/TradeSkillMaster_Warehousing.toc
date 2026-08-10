@@ -1,4 +1,4 @@
-## Interface: 80000
+## Interface: 70300
 ## Title: |cff00ff00TradeSkillMaster_Warehousing|r
 ## Notes: Manages your inventory by allowing you to easily move predefined groups of items between your bags, bank, and guild bank.
 ## Author: Sapu94, Bart39

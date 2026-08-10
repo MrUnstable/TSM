@@ -1,0 +1,9 @@
+## Interface: 70300
+## Title: |cff00ff00TradeSkillMaster_HistoricalTracker|r
+## Notes: Builds a local Historical Price for TSM_AuctionDB by tracking Market Value snapshots over time, since AppData.lua does not provide one on Tauri.
+## Author: Custom
+## Version: v1.0.0
+## SavedVariables: TradeSkillMaster_HistoricalTrackerDB
+## Dependencies: TradeSkillMaster, TradeSkillMaster_AuctionDB
+
+TradeSkillMaster_HistoricalTracker.lua

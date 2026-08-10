@@ -24,9 +24,9 @@ StaticPopupDialogs["TSM_AUCTIONDB_NO_DATA_POPUP"] = {
 }
 
 local settingsInfo = {
-	version = 2,
+	version = 3,
 	realm = {
-		hasAppData = { type = "boolean", default = true, lastModifiedVersion = 1},
+		hasAppData = { type = "boolean", default = false, lastModifiedVersion = 3},
 		lastSaveTime = { type = "number", default = 0, lastModifiedVersion = 1},
 		lastCompleteScan = { type = "number", default = 0, lastModifiedVersion = 1},
 		lastPartialScan = { type = "number", default = 0, lastModifiedVersion = 1},
@@ -99,6 +99,18 @@ function TSM:RegisterModule()
 	TSM.moduleAPIs = {
 		{ key = "lastCompleteScan", callback = TSM.GetLastCompleteScan },
 		{ key = "lastCompleteScanTime", callback = TSM.GetLastCompleteScanTime },
+		-- Iterate realm data without exposing the module object or its internal table.
+		{ key = "ForEachRealmItemData", callback = function(callback)
+			if type(callback) ~= "function" or not TSM.realmData then return end
+			for itemString, info in pairs(TSM.realmData) do
+				-- pcall per item so one malformed entry can't abort the whole
+				-- iteration for every item after it
+				local ok, err = pcall(callback, itemString, info)
+				if not ok then
+					TSM:LOG_ERR("ForEachRealmItemData callback failed for %s: %s", tostring(itemString), tostring(err))
+				end
+			end
+		end },
 	}
 	TSM.tooltip = {callbackLoad="LoadTooltip", callbackOptions="Config:LoadTooltipOptions", defaults=tooltipDefaults}
 	TSMAPI:NewModule(TSM)

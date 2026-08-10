@@ -12,7 +12,7 @@ local TSM = select(2, ...)
 local Items = TSM:NewModule("Items", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster") -- loads the localization table
 local private = {itemInfo={}, bonusIdCache={}, bonusIdTemp={}, scanTooltip=nil, newItems={}, numPending=0, itemLevelCache = {}, soulboundCache = {}, minLevelCache = {}, canUseCache = {}}
-local STATIC_DATA = {classLookup={}, classIdLookup={}, inventorySlotIdLookup={}}
+local STATIC_DATA = {classLookup={}, classIdLookup={}, inventorySlotIdLookup={}, inventorySlotStringLookup={}}
 STATIC_DATA.weaponClassName = GetItemClassInfo(LE_ITEM_CLASS_WEAPON)
 STATIC_DATA.armorClassName = GetItemClassInfo(LE_ITEM_CLASS_ARMOR)
 -- Needed because NUM_LE_ITEM_CLASSS contains an erroneous value
@@ -46,6 +46,7 @@ for i = 0, NUM_LE_INVENTORY_TYPES do
 	local invType = GetItemInventorySlotInfo(i)
 	if invType then
 		STATIC_DATA.inventorySlotIdLookup[strlower(invType)] = i
+		STATIC_DATA.inventorySlotStringLookup[i] = invType
 	end
 end
 local GET_ITEM_INFO_INSTANT_KEYS = {
@@ -341,6 +342,9 @@ function TSMAPI.Item:GetInventorySlotIdFromInventorySlotString(slot)
 	return STATIC_DATA.inventorySlotIdLookup[strlower(slot)]
 end
 
+function TSMAPI.Item:GetInventorySlotStringFromInventorySlotId(slotId)
+	return STATIC_DATA.inventorySlotStringLookup[slotId]
+end
 
 
 -- ============================================================================
@@ -409,6 +413,7 @@ end
 function private.SaveItemCache()
 	local resultRows = {}
 	local resultNames = {}
+	local cacheLength = 20
 	for itemString, data in pairs(private.itemInfo) do
 		local itemId = strmatch(itemString, "^i:([0-9]+)")
 		if itemId and not data._isInvalid then
@@ -420,7 +425,11 @@ function private.SaveItemCache()
 					private.EncodeNumber(data.itemLevel, 2), -- 2 bytes of itemLevel
 					private.EncodeNumber(data.minLevel, 1), -- 1 byte of minLevel
 					private.EncodeNumber(data.maxStack, 2), -- 2 bytes of maxStack
-					private.EncodeNumber(data.vendorPrice, 4) -- 4 bytes of vendorPrice
+					private.EncodeNumber(data.vendorPrice, 4), -- 4 bytes of vendorPrice
+					private.EncodeNumber(data.classId, 1), -- 1 bytes of classId
+					private.EncodeNumber(data.subClassId, 1), -- 1 bytes of subClassId
+					private.EncodeNumber(TSMAPI.Item:GetInventorySlotIdFromInventorySlotString(data.equipSlot), 1), -- 1 bytes of equipSlot
+					private.EncodeNumber(data.texture, 4) -- 4 bytes of texture
 				)
 			elseif data._encodedData then
 				row = data._encodedData
@@ -432,7 +441,7 @@ function private.SaveItemCache()
 		end
 	end
 	local result = table.concat(resultRows)
-	TSMAPI:Assert(#result % 13 == 0)
+	TSMAPI:Assert(#result % 20 == 0)
 	-- prepend the binary data length and append the names
 	result = private.EncodeNumber(#result, 4) .. result .. table.concat(resultNames, "\0")
 	-- prepend the hash
@@ -468,10 +477,11 @@ end
 function private.LoadItemCache()
 	-- check if the locale changed, in which case we won't load the cache
 	if TSM.db.global.locale ~= "" and TSM.db.global.locale ~= GetLocale() then return end
-
+	
 	-- check if the interface version changed, in which case we won't load the cache
 	local clientVersion = GetBuildInfo()
 	if TSM.db.global.clientVersion ~= clientVersion then return end
+	
 
 	local str = TSMItemCacheDB
 	if type(str) ~= "string" or #str < 4 then return end
@@ -484,14 +494,17 @@ function private.LoadItemCache()
 		return
 	end
 
+	local cacheLength = 20
 	-- calculate and check the length of the binary data section
 	local binDataLength = private.DecodeNumber(str, 4)
 	str = strsub(str, 5)
-	if binDataLength % 13 ~= 0 or binDataLength > #str then
+	if binDataLength % cacheLength ~= 0 or binDataLength > #str then
+		print(binDataLength)
+		print(#str)
 		TSM:LOG_ERR("Invalid bin data length (%s, %s)", tostring(binDataLength), tostring(#str))
 		return
 	end
-	local binDataEntries = binDataLength / 13
+	local binDataEntries = binDataLength / cacheLength
 
 	-- load the names
 	local names = TSMAPI.Util:SafeStrSplit(strsub(str, 1 + binDataLength), "\0")
@@ -502,20 +515,25 @@ function private.LoadItemCache()
 
 	local result = {}
 	for i = 0, binDataEntries - 1 do
-		local rowData = strsub(str, i * 13 + 1, (i + 1) * 13)
+		local rowData = strsub(str, i * cacheLength + 1, (i + 1) * cacheLength)
 		local itemString = "i:"..private.DecodeNumber(rowData, 3) -- 3 bytes of itemId
 		if result[itemString] then
 			TSM:LOG_ERR("Duplicate entry (%s)", itemString)
 			return
 		end
-		result[itemString] = {
+	result[itemString] = {
 			name = names[i + 1],
 			quality = private.DecodeNumber(rowData, 1, 3),  -- 1 byte of quality
 			itemLevel = private.DecodeNumber(rowData, 2, 4),  -- 2 bytes of itemLevel
 			minLevel = private.DecodeNumber(rowData, 1, 6),  -- 1 byte of minLevel
 			maxStack = private.DecodeNumber(rowData, 2, 7),  -- 2 bytes of maxStack
 			vendorPrice = private.DecodeNumber(rowData, 4, 9),  -- 4 bytes of vendorPrice
-			_encodedData = rowData
+			classId = private.DecodeNumber(rowData, 1, 13), -- 1 bytes of classId
+			subClassId = private.DecodeNumber(rowData, 1, 14), -- 1 bytes of subClassId
+			equipSlot = TSMAPI.Item:GetInventorySlotStringFromInventorySlotId(private.DecodeNumber(rowData, 1, 15)), -- 1 bytes of equipSlot
+			texture = private.DecodeNumber(rowData, 4, 16), -- 4 bytes of texture
+			_encodedData = rowData,
+			_getInfoInstantResult = true
 		}
 	end
 
@@ -625,8 +643,10 @@ function private.ItemInfoThread(self)
 		private.StoreGetItemInfoResult("i:"..itemId, GetItemInfo(itemId))
 	end)
 
+	TSM:LOG_INFO("Import start")
 	-- import the loaded item data
 	local numImported = 0
+	local numInstant = 0
 	if private.loadedItemInfo then
 		for itemString, data in pairs(private.loadedItemInfo) do
 			private.itemInfo[itemString] = data
@@ -642,12 +662,14 @@ function private.ItemInfoThread(self)
 		for itemString in pairs(private.loadedItemInfo) do
 			local info = private.itemInfo[itemString]
 			if not info._getInfoInstantResult then
+				numInstant = numInstant + 1
 				private.StoreGetItemInfoInstantResult(itemString, GetItemInfoInstant(TSMAPI.Item:ToItemID(itemString)))
 			end
 			numLoops = (numLoops + 1) % 100
 			self:Yield(numLoops == 0)
 		end
 	end
+	TSM:LOG_INFO("Needed %d items worth of data", numInstant)
 	TSM:LOG_INFO("Imported %d items worth of data", numImported)
 
 	local doneStatusMessage = false

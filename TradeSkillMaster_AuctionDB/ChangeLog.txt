@@ -1,3 +1,6 @@
+v3.1.20
+*Updated TOC version for patch 8.0.
+
 v3.1.19
 *Fixed bug with how data is loaded via the app.
 

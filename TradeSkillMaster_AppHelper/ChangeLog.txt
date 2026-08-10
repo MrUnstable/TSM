@@ -1,0 +1,31 @@
+v3.0.4
+*Updated TOC version for patch 7.3.
+
+v3.0.3
+*Updated TOC version for patch 7.2.
+
+v3.0.2
+*Updated TOC version for patch 7.1.
+
+v3.0.1
+*Bumped TOC version for patch 7.0.x.
+
+v3.0
+*Initial 3.0 version!
+\\
+
+v2.0.4
+* Updated for patch 6.2
+
+v2.0.3
+*Updated for new app version.
+*AppHelper will now register with TSM.
+
+v2.0.2
+*Fixed issue with accents in realm names.
+
+v2.0.1
+*Fixed conflict with TSM_Additions
+
+v2.0
+*First version!

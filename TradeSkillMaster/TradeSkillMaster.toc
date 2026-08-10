@@ -1,6 +1,6 @@
 ﻿## Interface: 70300
 ## Title: |cff00fe00TradeSkillMaster|r
-## Notes: Core addon for the TradeSkillMaster suite. Does nothing without modules installed.
+## Notes: Core addon for the TradeSkillMaster suite. Does nothing without modules installed.|nBackport by Reckwell - Evermoon (TauriWoW). |nUpdates on https://github.com/MrUnstable/TSM
 ## Author: Sapu94
 ## Version: v3.6.43
 ## SavedVariables: TradeSkillMasterDB, TSMItemCacheDB, TradeSkillMasterModulesDB

@@ -932,6 +932,8 @@ end
 function Professions:SetSelectedTradeSkill(spellId, forceUpdate)
 	if not TradeSkill:GetVisibilityInfo().professionsTab then return end
 
+	-- hacky af workaround
+	TradeSkillFrame.RecipeList:SetSelectedRecipeID(2963)
 	-- verify that the spellId is valid
 	spellId = private.ValidateTradeSkill(spellId)
 	forceUpdate = forceUpdate or spellId ~= private.selectedTradeSkill

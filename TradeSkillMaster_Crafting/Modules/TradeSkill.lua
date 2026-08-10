@@ -717,7 +717,7 @@ function TradeSkill:ClearFilters()
 end
 
 function TradeSkill:CastTradeSkill(spellId, quantity, vellum)
-	TradeSkill.Professions:SetSelectedTradeSkill(spellId)
+	TradeSkill.Professions:SetSelectedTradeSkill(spellId, true)
 	quantity = vellum and 1 or quantity
 	C_TradeSkillUI.CraftRecipe(spellId, quantity)
 	TradeSkill.isCrafting = {quantity=quantity, spellId=spellId}

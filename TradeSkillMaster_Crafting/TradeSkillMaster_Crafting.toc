@@ -1,4 +1,4 @@
-﻿## Interface: 70200
+﻿## Interface: 70300
 ## Title: |cff00ff00TradeSkillMaster_Crafting|r
 ## Notes: Provides a rich profession interface complete with a powerful crafting queue.
 ## Author: Sapu94, Bart39
