@@ -1,7 +1,7 @@
 # TSM TradeSkillMaster + modules for Legion 7.3.5 Client
 >[!NOTE]
 > ### For Tauri: You can use [AppdataFetcher](https://github.com/MrUnstable/TauriTSMAppDataFetcher) (No need to manually scan AH) ;)
-> ### Here Are raw item lists [TSM Imports](https://github.com/tehmufifnman/tsm_imports/tree/dcbba5a876d1d0761040024ab7ef2395aee853c8) For 7.3.5 (useful when making tsm groups)
+> ### Here Are raw item lists [TSM Imports](https://github.com/tehmufifnman/tsm_imports/tree/dcbba5a876d1d0761040024ab7ef2395aee853c8) (useful when making tsm groups)
 ## Modules:
 > TradeSkillMaster v3.6.43 (lastest Legion)
 > 
