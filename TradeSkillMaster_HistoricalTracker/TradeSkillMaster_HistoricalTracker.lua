@@ -10,8 +10,9 @@
 --  includes a "historical" field, so that tooltip line can never populate.       --
 --                                                                                --
 --  This addon works around that by taking its own daily snapshot of each item's  --
---  realm Market Value (from TSM_AuctionDB's realmData table, however that table  --
---  got populated - AppData or a manual/GetAll/Full scan) and storing a rolling   --
+--  realm Min Buyout (falling back to Market Value if no Min Buyout is available, --
+--  from TSM_AuctionDB's realmData table, however that table got populated -      --
+--  AppData or a manual/GetAll/Full scan) and storing a rolling                   --
 --  time series in its own SavedVariables. From that series it computes a        --
 --  simple auction-count-weighted average over a trailing window and writes it   --
 --  back into TSM_AuctionDB's realmData[itemString].historical, so the normal    --
@@ -58,7 +59,7 @@ end
 -- db/now/cutoff are passed in from Run() so they're computed once per run,
 -- not once per item.
 local function RecordSnapshotItem(db, now, cutoff, itemString, info)
-	local value = info.marketValue or info.minBuyout
+	local value = info.minBuyout or info.marketValue
 	if not value or value <= 0 then
 		return 0
 	end
