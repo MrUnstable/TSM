@@ -14,9 +14,13 @@
 --  from TSM_AuctionDB's realmData table, however that table got populated -      --
 --  AppData or a manual/GetAll/Full scan) and storing a rolling                   --
 --  time series in its own SavedVariables. From that series it computes a        --
---  simple auction-count-weighted average over a trailing window and writes it   --
---  back into TSM_AuctionDB's realmData[itemString].historical, so the normal    --
---  TSM tooltip code picks it up exactly as if the App had provided it.          --
+--  MEDIAN over a trailing window (robust to the wash-trading / wall-posting /   --
+--  lowball-dumping outliers common on a thin, manipulated economy - a simple    --
+--  average would get dragged around by those), floors the result against a     --
+--  multiple of the item's vendor sell price so it can never read as "worthless" --
+--  because of a bad stretch, and writes it back into TSM_AuctionDB's            --
+--  realmData[itemString].historical, so the normal TSM tooltip code picks it    --
+--  up exactly as if the App had provided it.                                   --
 -- ------------------------------------------------------------------------------ --
 
 local ADDON_NAME = ...
@@ -36,6 +40,9 @@ local STARTUP_DELAY_SECONDS        = 5             -- wait this long after PLAYE
 -- SavedVariables size and Lua's in-memory table overhead per sample (no
 -- repeated key-name strings, and array-part tables are cheaper per-entry
 -- than hash-part ones). These named indices keep call sites readable.
+-- (weight/numAuctions is recorded for possible future use/diagnostics, but
+-- the median in ComputeHistorical() below doesn't weight by it - weighting
+-- by auction count is exactly what let a single wall-posted day dominate.)
 local SAMPLE_TIME, SAMPLE_VALUE, SAMPLE_WEIGHT = 1, 2, 3
 
 -- ============================================================================
@@ -109,40 +116,104 @@ end
 -- Computing + injecting "historical"
 -- ============================================================================
 
--- Auction-count-weighted average over the trailing HISTORY_WINDOW_DAYS.
--- Falls back to using the full stored series if nothing falls in that window
--- (e.g. right after install, before enough days have accumulated).
-local function ComputeHistorical(series)
+-- Plain (unweighted) median of a list of copper values. Each day contributes
+-- at most one snapshot (see RecordSnapshotItem), so treating each day as one
+-- vote - rather than weighting by that day's auction count - is what makes
+-- this robust: a day where someone wall-posts 50 inflated auctions, or dumps
+-- a pile of lowballs, is still just ONE data point among the trailing window
+-- and gets outvoted by the days around it instead of dragging an average.
+-- Sorts `values` IN PLACE as a side effect - callers can reuse that sorted
+-- order afterwards (see Percentile() below) instead of sorting twice.
+local function Median(values)
+	local n = #values
+	if n == 0 then
+		return nil
+	end
+	table.sort(values)
+	local mid = ceil(n / 2)
+	if n % 2 == 1 then
+		return values[mid]
+	end
+	return floor(((values[mid] + values[mid + 1]) / 2) + 0.5)
+end
+
+-- Linear-interpolated percentile (p in [0,1]) over an ALREADY-SORTED array.
+local function Percentile(sortedValues, p)
+	local n = #sortedValues
+	if n == 0 then
+		return nil
+	elseif n == 1 then
+		return sortedValues[1]
+	end
+	local rank = p * (n - 1) + 1
+	local lo = floor(rank)
+	local frac = rank - lo
+	local hi = min(lo + 1, n)
+	return sortedValues[lo] + (sortedValues[hi] - sortedValues[lo]) * frac
+end
+
+-- Floor safeguard: even a median can get dragged below a sane price during a
+-- long stretch of manipulation (e.g. sustained lowball dumping), so the
+-- historical price is never allowed to read below:
+--   - VENDOR_SELL_FLOOR_MULT x the item's vendor sell price, when it has one; or
+--   - NO_VENDOR_FLOOR_PCT x this item's own trailing P75, when it doesn't
+--     (most BoE gear, quest items, etc, where GetVendorPrice returns 0/nil).
+-- NOTE on the no-vendor case: a floor of "X% of the median" would be a no-op
+-- (X% of a number can never exceed that same number, so max(median, X% *
+-- median) always just returns median) - it has to be anchored to something
+-- OTHER than the value it's flooring. P75 works: a minority of lowball posts
+-- can't move a 75th percentile at all (same reason the median resists them),
+-- so it stays a meaningful, independent anchor even when the median itself
+-- has been dragged down by a bad stretch.
+local VENDOR_SELL_FLOOR_MULT = 1.10
+local NO_VENDOR_FLOOR_PCT    = 0.30
+local function ApplyFloor(itemString, historical, sortedValues)
+	local vendorSell = TSMAPI.Item:GetVendorPrice(itemString) or 0
+	local floorValue
+	if vendorSell > 0 then
+		floorValue = vendorSell * VENDOR_SELL_FLOOR_MULT
+	else
+		local p75 = Percentile(sortedValues, 0.75)
+		floorValue = (p75 or historical) * NO_VENDOR_FLOOR_PCT
+	end
+	-- round-to-nearest rather than ceil(): ceil() can overshoot by a copper
+	-- here (e.g. 100 * 1.10 isn't exactly 110 in floating point, so ceil()
+	-- would round it up to 111) - irrelevant at the copper level either way,
+	-- but round-to-nearest matches the rest of this file and avoids it.
+	return max(historical, floor(floorValue + 0.5))
+end
+
+-- Median over the trailing HISTORY_WINDOW_DAYS, floored per ApplyFloor()
+-- above. Falls back to using the full stored series if nothing falls in that
+-- window (e.g. right after install, before enough days have accumulated).
+local function ComputeHistorical(itemString, series)
 	if not series or #series == 0 then
 		return nil
 	end
 
 	local windowCutoff = time() - (HISTORY_WINDOW_DAYS * 86400)
-	local totalWeight, totalValue = 0, 0
+	local values = {}
 	for _, sample in ipairs(series) do
 		if sample[SAMPLE_TIME] >= windowCutoff then
-			local w = sample[SAMPLE_WEIGHT] or 1
-			totalWeight = totalWeight + w
-			totalValue = totalValue + (sample[SAMPLE_VALUE] * w)
+			values[#values + 1] = sample[SAMPLE_VALUE]
 		end
 	end
 
-	if totalWeight == 0 then
+	if #values == 0 then
 		for _, sample in ipairs(series) do
-			local w = sample[SAMPLE_WEIGHT] or 1
-			totalWeight = totalWeight + w
-			totalValue = totalValue + (sample[SAMPLE_VALUE] * w)
+			values[#values + 1] = sample[SAMPLE_VALUE]
 		end
 	end
 
-	if totalWeight == 0 then
+	local median = Median(values) -- sorts `values` in place
+	if not median then
 		return nil
 	end
-	return floor((totalValue / totalWeight) + 0.5)
+	return ApplyFloor(itemString, median, values)
 end
 
 local function ProcessRealmItem(db, itemString, info)
-	local historical = ComputeHistorical(db[itemString])
+	local historical = ComputeHistorical(itemString, db[itemString])
 	if historical then
 		info.historical = historical
 		return 1
